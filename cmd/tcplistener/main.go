@@ -5,51 +5,58 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"net"
 )
 
 func main() {
-	file, err := os.Open("messages.txt")
+	listener, err := net.Listen("tcp", ":42069")
 	if err != nil {
-		log.Fatalf("Failed to open file: %v", err)
+		log.Fatalf("Failed to open listener: %v", err)
 	}
 
-	lines := getLinesChannel(file)
-	for line := range lines {
-		fmt.Printf("read: %s\n", line)
-	}
+	defer listener.Close()
 
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatalf("Failed to accept connection: %v", err)
+		}
+
+		fmt.Println("Connection has been accepted")
+		lines := getLinesChannel(conn)
+		for line := range lines {
+			fmt.Printf("read: %s\n", line)
+		}
+		fmt.Println("Connection has been closed")
+	}
 }
 
-func getLinesChannel(f io.ReadCloser) <-chan string {
+func getLinesChannel(conn net.Conn) <-chan string {
 	ch := make(chan string)
 
 	go func() {
-		defer f.Close()
+		defer conn.Close()
 		defer close(ch)
 
 		buffer := make([]byte, 8)
 		line := ""
 
 		for {
-			bytesRead, err := f.Read(buffer)
+			bytesRead, err := conn.Read(buffer)
 			if err != nil {
-
 				if line != "" {
 					ch <- line
 				}
-
 				if err == io.EOF {
 					break
 				}
-
 				log.Printf("Error during read: %v", err)
 				break
 			}
 
 			chunk := buffer[:bytesRead]
 			parts := bytes.Split(chunk, []byte("\n"))
-			
+
 			for i := 0; i < len(parts)-1; i++ {
 				ch <- line + string(parts[i])
 				line = ""
