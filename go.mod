@@ -1,4 +1,4 @@
-module httpfromtcp
+module github.com/geolunalg/httpfromtcp
 
 go 1.26.5
 
