@@ -8,19 +8,22 @@ import (
 	"github.com/geolunalg/httpfromtcp/internal/request"
 )
 
-func main() {
-	listener, err := net.Listen("tcp", ":42069")
-	if err != nil {
-		log.Fatalf("Failed to open listener: %v", err)
-	}
+const port = ":42069"
 
+func main() {
+	listener, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("error listening for TCP traffic: %s\n", err.Error())
+	}
 	defer listener.Close()
 
+	fmt.Println("Listening for TCP traffic on", port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatalf("Failed to accept connection: %v", err)
+			log.Fatalf("error: %s\n", err.Error())
 		}
+		fmt.Println("Accepted connection from", conn.RemoteAddr())
 
 		req, err := request.RequestFromReader(conn)
 		if err != nil {
@@ -32,7 +35,9 @@ func main() {
 		fmt.Printf("- Version: %s\n", req.RequestLine.HttpVersion)
 		fmt.Println("Headers:")
 		for key, value := range req.Headers {
-			fmt.Printf("- %s: %s \n", key, value)
+			fmt.Printf("- %s: %s\n", key, value)
 		}
+		fmt.Println("Body:")
+		fmt.Println(string(req.Body))
 	}
 }
