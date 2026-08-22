@@ -43,7 +43,8 @@ func (w *Writer) WriteHeaders(h headers.Headers) error {
 	}
 	defer func() { w.writerState = writerStateBody }()
 	for k, v := range h {
-		_, err := w.writer.Write([]byte(fmt.Sprintf("%s: %s\r\n", k, v)))
+		kvStr := fmt.Sprintf("%s: %s\r\n", k, v)
+		_, err := w.writer.Write([]byte(kvStr))
 		if err != nil {
 			return err
 		}
@@ -104,7 +105,8 @@ func (w *Writer) WriteTrailers(h headers.Headers) error {
 	}
 	defer func() { w.writerState = writerStateBody }()
 	for k, v := range h {
-		_, err := w.writer.Write([]byte(fmt.Sprintf("%s: %s\r\n", k, v)))
+		kvStr := fmt.Sprintf("%s: %s\r\n", k, v)
+		_, err := w.writer.Write([]byte(kvStr))
 		if err != nil {
 			return err
 		}

@@ -39,6 +39,11 @@ func handler(w *response.Writer, req *request.Request) {
 		return
 	}
 
+	if req.RequestLine.RequestTarget == "/video" {
+		videoHandler(w, req)
+		return
+	}
+
 	if req.RequestLine.RequestTarget == "/yourproblem" {
 		handler400(w, req)
 		return
@@ -121,7 +126,7 @@ func proxyHandler(w *response.Writer, req *request.Request) {
 	h.Override("Trailer", "X-Content-SHA256, X-Content-Length")
 	h.Remove("Content-Length")
 	w.WriteHeaders(h)
-	
+
 	fullBody := make([]byte, 0)
 
 	const maxChunkSize = 1024
@@ -158,4 +163,19 @@ func proxyHandler(w *response.Writer, req *request.Request) {
 		fmt.Println("Error writing trailers:", err)
 	}
 	fmt.Println("Wrote trailers")
+}
+
+func videoHandler(w *response.Writer, _ *request.Request) {
+	w.WriteStatusLine(response.StatusCodeSuccess)
+	const filepath = "assets/vim.mp4"
+	videoBytes, err := os.ReadFile(filepath)
+	if err != nil {
+		handler500(w, nil)
+		return
+	}
+
+	h := response.GetDefaultHeaders(len(videoBytes))
+	h.Override("Content-Type", "video/mp4")
+	w.WriteHeaders(h)
+	w.WriteBody(videoBytes)
 }
